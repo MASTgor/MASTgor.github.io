@@ -15,6 +15,7 @@ import {
   normalizePlannedEntries,
   parseStreamTitle,
 } from '../utils/format';
+import { FaqEditorModal, NewsEditorModal } from './AdminModals';
 
 interface HomeTabProps {
   games: GameItem[];
@@ -23,13 +24,34 @@ interface HomeTabProps {
   news: NewsItem[];
   faq: FaqItem[];
   liveState: TwitchLiveState;
+  isAdmin?: boolean;
+  onSaveNews?: (next: NewsItem[]) => void;
+  onSaveFaq?: (next: FaqItem[]) => void;
 }
 
 const NEWS_PAGE_SIZE = 3;
 
-export function HomeTab({ games, streams, calendar, news, faq, liveState }: HomeTabProps) {
+export function HomeTab({
+  games,
+  streams,
+  calendar,
+  news,
+  faq,
+  liveState,
+  isAdmin = false,
+  onSaveNews,
+  onSaveFaq,
+}: HomeTabProps) {
   const [previewError, setPreviewError] = useState(false);
   const [newsPage, setNewsPage] = useState(1);
+  const [editingNews, setEditingNews] = useState<{ item: NewsItem | null; isNew: boolean } | null>(
+    null,
+  );
+  const [editingFaq, setEditingFaq] = useState<{
+    item: FaqItem | null;
+    idx: number;
+    isNew: boolean;
+  } | null>(null);
 
   const inProgress = games.filter((g) => g.status === 'inprogress');
   const latestStream = streams.length > 0 ? [...streams].sort((a, b) => b.start - a.start)[0] : null;
@@ -246,6 +268,15 @@ export function HomeTab({ games, streams, calendar, news, faq, liveState }: Home
           <section className="panel">
             <div className="panel-header">
               <h2 className="panel-title">Новости канала</h2>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setEditingNews({ item: null, isNew: true })}
+                >
+                  + Добавить
+                </button>
+              )}
             </div>
             {pagedNews.length === 0 ? (
               <p className="muted">Новостей пока нет.</p>
@@ -256,7 +287,19 @@ export function HomeTab({ games, streams, calendar, news, faq, liveState }: Home
                     <article key={item.id} className="news-item">
                       <div className="news-head">
                         <strong>{item.title}</strong>
-                        <span className="news-date">{formatDateRu(item.date)}</span>
+                        <div className="admin-inline-actions">
+                          <span className="news-date">{formatDateRu(item.date)}</span>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              className="btn btn-sm admin-edit-btn"
+                              title="Редактировать"
+                              onClick={() => setEditingNews({ item, isNew: false })}
+                            >
+                              ✎
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <p>{item.text}</p>
                     </article>
@@ -291,20 +334,91 @@ export function HomeTab({ games, streams, calendar, news, faq, liveState }: Home
         </div>
       </div>
 
-      {faq.length > 0 && (
+      {(faq.length > 0 || isAdmin) && (
         <section className="panel">
           <div className="panel-header">
             <h2 className="panel-title">Мини-FAQ</h2>
+            {isAdmin && (
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => setEditingFaq({ item: null, idx: -1, isNew: true })}
+              >
+                + Добавить
+              </button>
+            )}
           </div>
           <div className="faq-grid">
             {faq.map((item, idx) => (
               <article key={idx} className="faq-card">
-                <h3 className="faq-q">{item.q}</h3>
+                <div className="admin-faq-head">
+                  <h3 className="faq-q">{item.q}</h3>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      className="btn btn-sm admin-edit-btn"
+                      title="Редактировать"
+                      onClick={() => setEditingFaq({ item, idx, isNew: false })}
+                    >
+                      ✎
+                    </button>
+                  )}
+                </div>
                 <p className="faq-a">{item.a}</p>
               </article>
             ))}
           </div>
         </section>
+      )}
+
+      {isAdmin && editingNews && (
+        <NewsEditorModal
+          item={editingNews.item}
+          isNew={editingNews.isNew}
+          onClose={() => setEditingNews(null)}
+          onSave={(saved) => {
+            if (!onSaveNews) return;
+            const next = editingNews.isNew
+              ? [saved, ...news]
+              : news.map((n) => (n.id === saved.id ? saved : n));
+            onSaveNews(next);
+            setEditingNews(null);
+          }}
+          onDelete={
+            editingNews.item
+              ? () => {
+                  if (!onSaveNews || !editingNews.item) return;
+                  onSaveNews(news.filter((n) => n.id !== editingNews.item!.id));
+                  setEditingNews(null);
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {isAdmin && editingFaq && (
+        <FaqEditorModal
+          item={editingFaq.item}
+          isNew={editingFaq.isNew}
+          onClose={() => setEditingFaq(null)}
+          onSave={(saved) => {
+            if (!onSaveFaq) return;
+            const next = editingFaq.isNew
+              ? [...faq, saved]
+              : faq.map((f, i) => (i === editingFaq.idx ? saved : f));
+            onSaveFaq(next);
+            setEditingFaq(null);
+          }}
+          onDelete={
+            !editingFaq.isNew
+              ? () => {
+                  if (!onSaveFaq) return;
+                  onSaveFaq(faq.filter((_, i) => i !== editingFaq.idx));
+                  setEditingFaq(null);
+                }
+              : undefined
+          }
+        />
       )}
     </div>
   );

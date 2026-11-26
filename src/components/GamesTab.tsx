@@ -10,11 +10,14 @@ import {
   matchStreamsForGame,
   parseStreamTitle,
 } from '../utils/format';
+import { GameEditorModal } from './AdminModals';
 
 interface GamesTabProps {
   games: GameItem[];
   streams: StreamRecord[];
   calendar: Record<string, PlannedStream[] | PlannedStream | string>;
+  isAdmin?: boolean;
+  onSaveGames?: (next: GameItem[]) => void;
 }
 
 const STATUS_TABS: Array<{ id: GameStatus; label: string }> = [
@@ -29,10 +32,19 @@ const STATUS_LABELS: Record<GameStatus, string> = {
   completed: 'Пройдено',
 };
 
-export function GamesTab({ games, streams, calendar }: GamesTabProps) {
+export function GamesTab({
+  games,
+  streams,
+  calendar,
+  isAdmin = false,
+  onSaveGames,
+}: GamesTabProps) {
   const [activeStatus, setActiveStatus] = useState<GameStatus>('inprogress');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGame, setSelectedGame] = useState<GameItem | null>(null);
+  const [editingGame, setEditingGame] = useState<{ item: GameItem | null; isNew: boolean } | null>(
+    null,
+  );
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -91,13 +103,24 @@ export function GamesTab({ games, streams, calendar }: GamesTabProps) {
           })}
         </div>
 
-        <input
-          type="text"
-          className="search-input games-search-input"
-          placeholder="Поиск по названию..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="admin-toolbar-right">
+          <input
+            type="text"
+            className="search-input games-search-input"
+            placeholder="Поиск по названию..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {isAdmin && (
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => setEditingGame({ item: null, isNew: true })}
+            >
+              + Добавить
+            </button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -125,6 +148,19 @@ export function GamesTab({ games, streams, calendar }: GamesTabProps) {
                   <span className={`status-tag status-${item.status}`}>
                     {STATUS_LABELS[item.status]}
                   </span>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      className="btn btn-sm admin-card-edit"
+                      title="Редактировать"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingGame({ item, isNew: false });
+                      }}
+                    >
+                      ✎
+                    </button>
+                  )}
                 </div>
 
                 <div className="game-body">
@@ -351,6 +387,30 @@ export function GamesTab({ games, streams, calendar }: GamesTabProps) {
             </div>
           </div>
         </div>
+      )}
+      {isAdmin && editingGame && (
+        <GameEditorModal
+          game={editingGame.item}
+          isNew={editingGame.isNew}
+          onClose={() => setEditingGame(null)}
+          onSave={(saved) => {
+            if (!onSaveGames) return;
+            const next = editingGame.isNew
+              ? [saved, ...games]
+              : games.map((g) => (g.id === editingGame.item?.id ? saved : g));
+            onSaveGames(next);
+            setEditingGame(null);
+          }}
+          onDelete={
+            editingGame.item
+              ? () => {
+                  if (!onSaveGames || !editingGame.item) return;
+                  onSaveGames(games.filter((g) => g.id !== editingGame.item!.id));
+                  setEditingGame(null);
+                }
+              : undefined
+          }
+        />
       )}
     </div>
   );

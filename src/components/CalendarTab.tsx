@@ -10,17 +10,30 @@ import {
   parseStreamTitle,
   toDateKey,
 } from '../utils/format';
+import { StreamEditorModal } from './AdminModals';
 
 interface CalendarTabProps {
   games: GameItem[];
   streams: StreamRecord[];
   calendar: Record<string, PlannedStream[] | PlannedStream | string>;
+  isAdmin?: boolean;
+  onSaveStreams?: (next: StreamRecord[]) => void;
 }
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const PAGE_SIZE = 10;
 
-export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
+export function CalendarTab({
+  games,
+  streams,
+  calendar,
+  isAdmin = false,
+  onSaveStreams,
+}: CalendarTabProps) {
+  const [editingStream, setEditingStream] = useState<{
+    item: StreamRecord | null;
+    isNew: boolean;
+  } | null>(null);
   const todayKey = useMemo(() => toDateKey(Date.now()), []);
   const sortedStreams = useMemo(
     () => [...streams].sort((a, b) => b.start - a.start),
@@ -348,7 +361,19 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
                       />
                     )}
                     <div className="stream-box-body">
-                      <div className="stream-cat">{categoryLabel}</div>
+                      <div className="admin-stream-head">
+                        <div className="stream-cat">{categoryLabel}</div>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            className="btn btn-sm admin-edit-btn"
+                            title="Редактировать"
+                            onClick={() => setEditingStream({ item: s, isNew: false })}
+                          >
+                            ✎
+                          </button>
+                        )}
+                      </div>
                       {parsed.tags.length > 0 && (
                         <div className="stream-tags">
                           {parsed.tags.map((tag, idx) => (
@@ -404,6 +429,15 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
       <section className="panel">
         <div className="panel-header">
           <h2 className="panel-title">История прошедших стримов ({filteredHistory.length})</h2>
+          {isAdmin && (
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => setEditingStream({ item: null, isNew: true })}
+            >
+              + Добавить
+            </button>
+          )}
         </div>
 
         <div className="history-search">
@@ -473,7 +507,17 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
                             VOD
                           </a>
                         )}
-                        {!s.boostyUrl && !s.vodUrl && <span className="muted">—</span>}
+                        {!s.boostyUrl && !s.vodUrl && !isAdmin && <span className="muted">—</span>}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            className="btn btn-sm admin-edit-btn"
+                            title="Редактировать"
+                            onClick={() => setEditingStream({ item: s, isNew: false })}
+                          >
+                            ✎
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -525,6 +569,31 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
           </div>
         )}
       </section>
+
+      {isAdmin && editingStream && (
+        <StreamEditorModal
+          stream={editingStream.item}
+          isNew={editingStream.isNew}
+          onClose={() => setEditingStream(null)}
+          onSave={(saved) => {
+            if (!onSaveStreams) return;
+            const next = editingStream.isNew
+              ? [saved, ...streams]
+              : streams.map((s) => (s.id === saved.id ? saved : s));
+            onSaveStreams(next);
+            setEditingStream(null);
+          }}
+          onDelete={
+            editingStream.item
+              ? () => {
+                  if (!onSaveStreams || !editingStream.item) return;
+                  onSaveStreams(streams.filter((s) => s.id !== editingStream.item!.id));
+                  setEditingStream(null);
+                }
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 }

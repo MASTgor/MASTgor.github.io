@@ -1334,6 +1334,155 @@ body,
   gap: 10px;
 }
 
+/* Встроенная локальная админка */
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-inline-actions,
+.admin-stream-head,
+.admin-faq-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-edit-btn {
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.admin-card-edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+.btn-danger {
+  background: #8f1d1d;
+  color: #ffffff;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-col-2 {
+  grid-column: span 2;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--gold);
+}
+
+.admin-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 3px solid var(--void);
+  background: var(--slot);
+  color: var(--text);
+  font-family: var(--font-game);
+  font-size: 11px;
+  outline: none;
+}
+
+.admin-input:focus {
+  border-color: var(--gold);
+}
+
+.admin-search-box {
+  padding: 10px;
+  background: var(--slot);
+  border: 3px solid var(--void);
+}
+
+.admin-search-row {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.admin-search-pick {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--panel-dk);
+  border: 2px solid var(--void);
+  color: var(--text);
+  font-family: var(--font-game);
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-search-pick:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.admin-pick-img {
+  width: 30px;
+  height: 40px;
+  object-fit: cover;
+  border: 1px solid var(--void);
+}
+
+.admin-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.admin-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 95;
+  padding: 10px 14px;
+  background: #176937;
+  color: #ffffff;
+  border: 3px solid var(--void);
+  box-shadow: 4px 4px 0 0 var(--shadow);
+  font-size: 11px;
+}
+
+.admin-toast.is-error {
+  background: #8f1d1d;
+}
+
 /* Таблица истории стримов */
 .history-search {
   margin-bottom: 12px;

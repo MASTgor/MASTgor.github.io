@@ -125,7 +125,7 @@ export function parseStreamTitle(rawTitle: string): { cleanTitle: string; tags: 
 }
 
 export function matchPlannedForGame(
-  item: { id: string; name: string },
+  item: { id: string; name: string; dateFrom?: string; dateTo?: string },
   calendar: Record<string, PlannedStream[] | PlannedStream | string>,
 ): Array<{ dateKey: string; plan: PlannedStream }> {
   const todayKey = toDateKey(Date.now());
@@ -135,15 +135,19 @@ export function matchPlannedForGame(
 
   for (const dateKey of Object.keys(calendar).sort()) {
     if (dateKey < todayKey) continue;
+    if (item.dateFrom && dateKey < item.dateFrom) continue;
+    if (item.dateTo && dateKey > item.dateTo) continue;
     const entries = normalizePlannedEntries(calendar[dateKey]);
     for (const p of entries) {
-      const matches =
-        (p.id && String(p.id) === String(item.id)) ||
-        (p.game && p.game.toLowerCase() === lowerName) ||
-        (p.name && p.name.toLowerCase() === lowerName) ||
-        (p.title &&
-          (p.title.toLowerCase().includes(lowerName) ||
-            (normName.length > 0 && normalizeForMatch(p.title).includes(normName))));
+      // Если у запланированной записи есть ID — сопоставляем строго по ID,
+      // чтобы не смешивать игры с одинаковым названием (например, старую и новую Zelda).
+      const matches = p.id
+        ? String(p.id) === String(item.id)
+        : (p.game && p.game.toLowerCase() === lowerName) ||
+          (p.name && p.name.toLowerCase() === lowerName) ||
+          (p.title &&
+            (p.title.toLowerCase().includes(lowerName) ||
+              (normName.length > 0 && normalizeForMatch(p.title).includes(normName))));
       if (matches) {
         result.push({ dateKey, plan: p });
       }
@@ -153,25 +157,10 @@ export function matchPlannedForGame(
 }
 
 export function findNextStreamDate(
-  item: { id: string; name: string },
+  item: { id: string; name: string; dateFrom?: string; dateTo?: string },
   calendar: Record<string, PlannedStream[] | PlannedStream | string>,
 ): string | undefined {
-  const todayKey = toDateKey(Date.now());
-  const lowerName = item.name.toLowerCase();
-  const matchingDates = Object.keys(calendar)
-    .filter((dateKey) => dateKey >= todayKey)
-    .sort()
-    .filter((dateKey) => {
-      const entries = normalizePlannedEntries(calendar[dateKey]);
-      return entries.some(
-        (p) =>
-          (p.id && String(p.id) === String(item.id)) ||
-          (p.game && p.game.toLowerCase() === lowerName) ||
-          (p.name && p.name.toLowerCase() === lowerName) ||
-          (p.title && p.title.toLowerCase().includes(lowerName)),
-      );
-    });
-  return matchingDates[0];
+  return matchPlannedForGame(item, calendar)[0]?.dateKey;
 }
 
 export async function fetchTwitchLiveStatus(channel: string): Promise<TwitchLiveState> {
