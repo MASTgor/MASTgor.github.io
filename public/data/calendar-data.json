@@ -1,0 +1,107 @@
+{
+  "games": [
+    {
+      "id": "2067181260",
+      "name": "The Legend of Zelda: Ocarina of Time",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/2067181260_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "inprogress",
+      "lastStreamDate": "2026-11-05"
+    },
+    {
+      "id": "5451177",
+      "name": "Мужское / Женское",
+      "year": " (2014)",
+      "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/660f1055-b05c-4894-9b0e-5beda596212d/300x450",
+      "source": "kinopoisk",
+      "status": "inprogress"
+    },
+    {
+      "id": "9324793",
+      "name": "Мама в 16",
+      "year": " (2023)",
+      "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/a1ea35ab-9f60-4c53-bc01-c08255a5bd01/300x450",
+      "source": "kinopoisk",
+      "status": "inprogress",
+      "lastStreamDate": "2026-10-19"
+    },
+    {
+      "id": "369075",
+      "name": "A Hat in Time",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/369075_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "278888515",
+      "name": "Gartic Phone",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/278888515_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "12482",
+      "name": "The Legend of Zelda: Majora's Mask",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/12482_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "5338",
+      "name": "Rayman 3: Hoodlum Havoc",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/5338_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "91423",
+      "name": "Dark Souls II",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/91423_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "3947",
+      "name": "Silent Hill",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/3947_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    }
+  ],
+  "calendar": {
+    "2026-11-27": [
+      {
+        "id": "5451177",
+        "name": "Мужское / Женское",
+        "year": " (2014)",
+        "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/660f1055-b05c-4894-9b0e-5beda596212d/300x450",
+        "source": "kinopoisk"
+      }
+    ],
+    "2026-11-28": [
+      {
+        "id": "2067181260",
+        "name": "The Legend of Zelda: Ocarina of Time",
+        "year": "",
+        "image": "https://static-cdn.jtvnw.net/ttv-boxart/2067181260_IGDB-285x380.jpg",
+        "source": "twitch"
+      }
+    ],
+    "2026-11-29": [
+      {
+        "id": "369075",
+        "name": "A Hat in Time",
+        "year": "",
+        "image": "https://static-cdn.jtvnw.net/ttv-boxart/369075_IGDB-285x380.jpg",
+        "source": "twitch"
+      }
+    ]
+  }
+}
