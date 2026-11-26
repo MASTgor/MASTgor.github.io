@@ -87,30 +87,12 @@
     }
   ],
   "calendar": {
-    "2026-11-27": [
-      {
-        "id": "5451177",
-        "name": "Мужское / Женское",
-        "year": " (2014)",
-        "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/660f1055-b05c-4894-9b0e-5beda596212d/300x450",
-        "source": "kinopoisk"
-      }
-    ],
     "2026-11-28": [
       {
         "id": "2067181260",
         "name": "The Legend of Zelda: Ocarina of Time",
         "year": "",
         "image": "https://static-cdn.jtvnw.net/ttv-boxart/2067181260_IGDB-285x380.jpg",
-        "source": "twitch"
-      }
-    ],
-    "2026-11-29": [
-      {
-        "id": "369075",
-        "name": "A Hat in Time",
-        "year": "",
-        "image": "https://static-cdn.jtvnw.net/ttv-boxart/369075_IGDB-285x380.jpg",
         "source": "twitch"
       }
     ]
