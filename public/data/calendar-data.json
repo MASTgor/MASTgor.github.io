@@ -7,6 +7,7 @@
       "image": "https://static-cdn.jtvnw.net/ttv-boxart/2067181260_IGDB-285x380.jpg",
       "source": "twitch",
       "status": "inprogress",
+      "dateFrom": "2026-11-01",
       "lastStreamDate": "2026-11-05"
     },
     {
@@ -15,7 +16,8 @@
       "year": " (2014)",
       "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/660f1055-b05c-4894-9b0e-5beda596212d/300x450",
       "source": "kinopoisk",
-      "status": "inprogress"
+      "status": "inprogress",
+      "lastStreamDate": "2026-09-21"
     },
     {
       "id": "9324793",
@@ -73,6 +75,15 @@
       "image": "https://static-cdn.jtvnw.net/ttv-boxart/3947_IGDB-285x380.jpg",
       "source": "twitch",
       "status": "planned"
+    },
+    {
+      "id": "11557",
+      "name": "The Legend of Zelda: Ocarina of Time",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/11557_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "completed",
+      "lastStreamDate": "2026-11-05"
     }
   ],
   "calendar": {
