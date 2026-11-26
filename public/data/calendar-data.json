@@ -84,6 +84,47 @@
       "source": "twitch",
       "status": "completed",
       "lastStreamDate": "2026-11-05"
+    },
+    {
+      "id": "565161400",
+      "name": "Chrono Trigger",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/565161400_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "490744",
+      "name": "Stardew Valley",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/490744_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "506415",
+      "name": " SEKIRO: SHADOWS DIE TWICE",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/506415_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "499111",
+      "name": "Psychonauts 2",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/499111_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "16631",
+      "name": "Exolon",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/16631_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned",
+      "lastStreamDate": "2026-09-14"
     }
   ],
   "calendar": {}
