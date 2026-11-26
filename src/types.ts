@@ -10,6 +10,8 @@ export interface GameItem {
   status: GameStatus;
   checkpoint?: string;
   lastStreamDate?: string;
+  dateFrom?: string;
+  dateTo?: string;
   vodUrl?: string;
   boostyUrl?: string;
 }
@@ -44,6 +46,22 @@ export interface StreamRecord {
 
 export interface StreamsHistoryData {
   streams: StreamRecord[];
+}
+
+export interface NewsItem {
+  id: string;
+  date: string;
+  title: string;
+  text: string;
+}
+
+export interface NewsData {
+  news: NewsItem[];
+}
+
+export interface FaqItem {
+  q: string;
+  a: string;
 }
 
 export type TabId = 'home' | 'games' | 'calendar';

@@ -38,6 +38,47 @@ export function formatDuration(startMs: number, endMs: number): string {
   return `${hours} ч ${minutes} мин`;
 }
 
+export function formatTotalDuration(totalMs: number): string {
+  const totalMinutes = Math.max(0, Math.round(totalMs / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} мин`;
+  if (minutes === 0) return `${hours} ч`;
+  return `${hours} ч ${minutes} мин`;
+}
+
+export function normalizeForMatch(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-zа-яё0-9]+/gi, ' ')
+    .replace(/(^|\s)и(\s|$)/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function matchStreamsForGame(
+  item: { name: string; dateFrom?: string; dateTo?: string },
+  streams: StreamRecord[],
+): StreamRecord[] {
+  const lowerName = item.name.toLowerCase();
+  const normName = normalizeForMatch(item.name);
+  return streams
+    .filter((s) => {
+      const lowerTitle = s.title.toLowerCase();
+      const normTitle = normalizeForMatch(s.title);
+      const nameMatch =
+        s.game.toLowerCase() === lowerName ||
+        (s.game.toLowerCase() === 'just chatting' &&
+          (lowerTitle.includes(lowerName) || (normName.length > 0 && normTitle.includes(normName))));
+      if (!nameMatch) return false;
+      const dateKey = toDateKey(s.start);
+      if (item.dateFrom && dateKey < item.dateFrom) return false;
+      if (item.dateTo && dateKey > item.dateTo) return false;
+      return true;
+    })
+    .sort((a, b) => b.start - a.start);
+}
+
 export function normalizePlannedEntries(
   raw: PlannedStream[] | PlannedStream | string | undefined,
 ): PlannedStream[] {
@@ -81,6 +122,34 @@ export function parseStreamTitle(rawTitle: string): { cleanTitle: string; tags: 
     cleanTitle: parts.join(' • ') || withoutTags || 'Без описания',
     tags,
   };
+}
+
+export function matchPlannedForGame(
+  item: { id: string; name: string },
+  calendar: Record<string, PlannedStream[] | PlannedStream | string>,
+): Array<{ dateKey: string; plan: PlannedStream }> {
+  const todayKey = toDateKey(Date.now());
+  const lowerName = item.name.toLowerCase();
+  const normName = normalizeForMatch(item.name);
+  const result: Array<{ dateKey: string; plan: PlannedStream }> = [];
+
+  for (const dateKey of Object.keys(calendar).sort()) {
+    if (dateKey < todayKey) continue;
+    const entries = normalizePlannedEntries(calendar[dateKey]);
+    for (const p of entries) {
+      const matches =
+        (p.id && String(p.id) === String(item.id)) ||
+        (p.game && p.game.toLowerCase() === lowerName) ||
+        (p.name && p.name.toLowerCase() === lowerName) ||
+        (p.title &&
+          (p.title.toLowerCase().includes(lowerName) ||
+            (normName.length > 0 && normalizeForMatch(p.title).includes(normName))));
+      if (matches) {
+        result.push({ dateKey, plan: p });
+      }
+    }
+  }
+  return result;
 }
 
 export function findNextStreamDate(

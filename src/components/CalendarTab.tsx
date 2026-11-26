@@ -5,6 +5,7 @@ import {
   formatDateTimeRu,
   formatDuration,
   groupStreamsByDate,
+  normalizeForMatch,
   normalizePlannedEntries,
   parseStreamTitle,
   toDateKey,
@@ -107,18 +108,25 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
     setSelectedDateKey(todayKey);
   };
 
+  const matchGameInTitle = (gameName?: string, streamTitle?: string): GameItem | undefined => {
+    if (!streamTitle) return undefined;
+    if (gameName && gameName.toLowerCase() !== 'just chatting') return undefined;
+    const lowerTitle = streamTitle.toLowerCase();
+    const normTitle = normalizeForMatch(streamTitle);
+    return games.find((g) => {
+      const gLower = g.name.toLowerCase();
+      const gNorm = normalizeForMatch(g.name);
+      return lowerTitle.includes(gLower) || (gNorm.length > 0 && normTitle.includes(gNorm));
+    });
+  };
+
   const findCover = (
     gameName?: string,
     streamTitle?: string,
     directImage?: string,
   ): string | undefined => {
-    if (streamTitle) {
-      const lowerTitle = streamTitle.toLowerCase();
-      const matchedInTitle = games.find((g) => lowerTitle.includes(g.name.toLowerCase()));
-      if (matchedInTitle && (!gameName || gameName.toLowerCase() === 'just chatting')) {
-        return matchedInTitle.image;
-      }
-    }
+    const matched = matchGameInTitle(gameName, streamTitle);
+    if (matched) return matched.image;
     if (directImage) return directImage;
     if (gameName) {
       const exact = gameImageByName[gameName.toLowerCase()];
@@ -134,10 +142,15 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
   const filteredHistory = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return sortedStreams;
-    return sortedStreams.filter(
-      (s) => s.title.toLowerCase().includes(q) || s.game.toLowerCase().includes(q),
-    );
-  }, [sortedStreams, searchQuery]);
+    return sortedStreams.filter((s) => {
+      const matched = matchGameInTitle(s.game, s.title);
+      return (
+        s.title.toLowerCase().includes(q) ||
+        s.game.toLowerCase().includes(q) ||
+        (matched ? matched.name.toLowerCase().includes(q) : false)
+      );
+    });
+  }, [sortedStreams, searchQuery, games]);
 
   const totalPages = Math.max(1, Math.ceil(filteredHistory.length / PAGE_SIZE));
   const safePage = Math.min(historyPage, totalPages);
@@ -240,11 +253,15 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
                           <span className="cal-tooltip-tag">План:</span> {plan.title}
                         </div>
                       ))}
-                      {dayStreams.map((st) => (
-                        <div key={st.id} className="cal-tooltip-row">
-                          <span className="cal-tooltip-tag">Стрим:</span> {st.game}
-                        </div>
-                      ))}
+                      {dayStreams.map((st) => {
+                        const matched = matchGameInTitle(st.game, st.title);
+                        return (
+                          <div key={st.id} className="cal-tooltip-row">
+                            <span className="cal-tooltip-tag">Стрим:</span>{' '}
+                            {matched ? `Просмотр: ${matched.name}` : st.game}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </button>
@@ -277,21 +294,35 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
           {selectedPlanned.length > 0 && (
             <div className="day-section">
               <div className="day-subtitle">Запланировано</div>
-              {selectedPlanned.map((plan, idx) => (
-                <div key={idx} className="stream-box is-plan">
-                  <div className="stream-title">{plan.title}</div>
-                  {plan.game && !plan.title?.toLowerCase().startsWith(plan.game.toLowerCase()) && (
-                    <div className="stream-cat">Категория: {plan.game}</div>
-                  )}
-                  {plan.source && (
-                    <div className="stream-meta">
-                      <span>{plan.source === 'twitch' ? 'Игра' : 'Просмотр'}</span>
+              {selectedPlanned.map((plan, idx) => {
+                const cover =
+                  plan.image || findCover(plan.game, plan.title);
+                return (
+                  <div key={idx} className="stream-box is-plan stream-box-row">
+                    {cover && (
+                      <img
+                        src={cover}
+                        alt={plan.title ?? ''}
+                        className="stream-box-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="stream-box-body">
+                      <div className="stream-title">{plan.title}</div>
+                      {plan.game && !plan.title?.toLowerCase().startsWith(plan.game.toLowerCase()) && (
+                        <div className="stream-cat">Категория: {plan.game}</div>
+                      )}
+                      {plan.source && (
+                        <div className="stream-meta">
+                          <span>{plan.source === 'twitch' ? 'Игра' : 'Просмотр'}</span>
+                        </div>
+                      )}
+                      {plan.time && <div className="stream-meta">Время: {plan.time}</div>}
+                      {plan.note && <div className="stream-meta">{plan.note}</div>}
                     </div>
-                  )}
-                  {plan.time && <div className="stream-meta">Время: {plan.time}</div>}
-                  {plan.note && <div className="stream-meta">{plan.note}</div>}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -300,47 +331,63 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
               <div className="day-subtitle">Прошедшие стримы</div>
               {selectedStreams.map((s) => {
                 const parsed = parseStreamTitle(s.title);
+                const matched = matchGameInTitle(s.game, s.title);
+                const cover = findCover(s.game, s.title, s.image);
+                const categoryLabel = matched
+                  ? `${s.game} • Просмотр: ${matched.name}`
+                  : s.game;
+
                 return (
-                  <div key={s.id} className="stream-box">
-                    <div className="stream-cat">{s.game}</div>
-                    {parsed.tags.length > 0 && (
-                      <div className="stream-tags">
-                        {parsed.tags.map((tag, idx) => (
-                          <span key={`${tag}-${idx}`} className="tag-badge">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                  <div key={s.id} className="stream-box stream-box-row">
+                    {cover && (
+                      <img
+                        src={cover}
+                        alt={matched ? matched.name : s.game}
+                        className="stream-box-cover"
+                        loading="lazy"
+                      />
                     )}
-                    <div className="stream-title">{parsed.cleanTitle}</div>
-                    <div className="stream-meta">
-                      <span>{formatDateTimeRu(s.start)}</span>
-                      <span>Длительность: {formatDuration(s.start, s.end)}</span>
+                    <div className="stream-box-body">
+                      <div className="stream-cat">{categoryLabel}</div>
+                      {parsed.tags.length > 0 && (
+                        <div className="stream-tags">
+                          {parsed.tags.map((tag, idx) => (
+                            <span key={`${tag}-${idx}`} className="tag-badge">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="stream-title">{parsed.cleanTitle}</div>
+                      <div className="stream-meta">
+                        <span>{formatDateTimeRu(s.start)}</span>
+                        <span>Длительность: {formatDuration(s.start, s.end)}</span>
+                      </div>
+                      {(s.vodUrl || s.boostyUrl) && (
+                        <div className="stream-links">
+                          {s.vodUrl && (
+                            <a
+                              className="btn btn-sm"
+                              href={s.vodUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              VOD
+                            </a>
+                          )}
+                          {s.boostyUrl && (
+                            <a
+                              className="btn btn-sm btn-boosty"
+                              href={s.boostyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Запись на Boosty
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {(s.vodUrl || s.boostyUrl) && (
-                      <div className="stream-links">
-                        {s.vodUrl && (
-                          <a
-                            className="btn btn-sm"
-                            href={s.vodUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            VOD
-                          </a>
-                        )}
-                        {s.boostyUrl && (
-                          <a
-                            className="btn btn-sm btn-boosty"
-                            href={s.boostyUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Запись на Boosty
-                          </a>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -383,10 +430,14 @@ export function CalendarTab({ games, streams, calendar }: CalendarTabProps) {
             <tbody>
               {pagedHistory.map((s) => {
                 const parsed = parseStreamTitle(s.title);
+                const matched = matchGameInTitle(s.game, s.title);
+                const categoryLabel = matched
+                  ? `${s.game} • Просмотр: ${matched.name}`
+                  : s.game;
                 return (
                   <tr key={s.id}>
                     <td className="td-nowrap">{formatDateTimeRu(s.start)}</td>
-                    <td className="td-cat">{s.game}</td>
+                    <td className="td-cat">{categoryLabel}</td>
                     <td>
                       <div>{parsed.cleanTitle}</div>
                       {parsed.tags.length > 0 && (

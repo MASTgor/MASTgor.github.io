@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import type { GameItem, PlannedStream, StreamRecord, TwitchLiveState } from '../types';
+import { useMemo, useState } from 'react';
+import type {
+  FaqItem,
+  GameItem,
+  NewsItem,
+  PlannedStream,
+  StreamRecord,
+  TwitchLiveState,
+} from '../types';
 import {
   findNextStreamDate,
   formatDateRu,
@@ -13,24 +20,16 @@ interface HomeTabProps {
   games: GameItem[];
   streams: StreamRecord[];
   calendar: Record<string, PlannedStream[] | PlannedStream | string>;
+  news: NewsItem[];
+  faq: FaqItem[];
   liveState: TwitchLiveState;
 }
 
-const CHANNEL_NEWS = [
-  {
-    date: '26.11.2026',
-    title: 'Запустили сайт канала',
-    text: 'Теперь здесь можно следить за текущими прохождениями, смотреть момент остановки и проверять календарь с историей стримов.',
-  },
-  {
-    date: 'Скоро',
-    title: 'Записи прохождений на Boosty',
-    text: 'Готовим архив полных прохождений для Boosty — ссылки будут появляться прямо на карточках игр.',
-  },
-];
+const NEWS_PAGE_SIZE = 3;
 
-export function HomeTab({ games, streams, calendar, liveState }: HomeTabProps) {
+export function HomeTab({ games, streams, calendar, news, faq, liveState }: HomeTabProps) {
   const [previewError, setPreviewError] = useState(false);
+  const [newsPage, setNewsPage] = useState(1);
 
   const inProgress = games.filter((g) => g.status === 'inprogress');
   const latestStream = streams.length > 0 ? [...streams].sort((a, b) => b.start - a.start)[0] : null;
@@ -38,6 +37,17 @@ export function HomeTab({ games, streams, calendar, liveState }: HomeTabProps) {
   const upcomingEntries = Object.entries(calendar)
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, 3);
+
+  const sortedNews = useMemo(
+    () => [...news].sort((a, b) => b.date.localeCompare(a.date)),
+    [news],
+  );
+  const newsTotalPages = Math.max(1, Math.ceil(sortedNews.length / NEWS_PAGE_SIZE));
+  const safeNewsPage = Math.min(newsPage, newsTotalPages);
+  const pagedNews = useMemo(() => {
+    const start = (safeNewsPage - 1) * NEWS_PAGE_SIZE;
+    return sortedNews.slice(start, start + NEWS_PAGE_SIZE);
+  }, [sortedNews, safeNewsPage]);
 
   const previewUrl =
     liveState.status === 'live'
@@ -237,20 +247,65 @@ export function HomeTab({ games, streams, calendar, liveState }: HomeTabProps) {
             <div className="panel-header">
               <h2 className="panel-title">Новости канала</h2>
             </div>
-            <div className="news-list">
-              {CHANNEL_NEWS.map((news) => (
-                <article key={news.title} className="news-item">
-                  <div className="news-head">
-                    <strong>{news.title}</strong>
-                    <span className="news-date">{news.date}</span>
+            {pagedNews.length === 0 ? (
+              <p className="muted">Новостей пока нет.</p>
+            ) : (
+              <>
+                <div className="news-list">
+                  {pagedNews.map((item) => (
+                    <article key={item.id} className="news-item">
+                      <div className="news-head">
+                        <strong>{item.title}</strong>
+                        <span className="news-date">{formatDateRu(item.date)}</span>
+                      </div>
+                      <p>{item.text}</p>
+                    </article>
+                  ))}
+                </div>
+                {newsTotalPages > 1 && (
+                  <div className="pagination-bar news-pagination">
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      disabled={safeNewsPage <= 1}
+                      onClick={() => setNewsPage((p) => Math.max(1, p - 1))}
+                    >
+                      ←
+                    </button>
+                    <span className="news-page-info">
+                      {safeNewsPage} / {newsTotalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      disabled={safeNewsPage >= newsTotalPages}
+                      onClick={() => setNewsPage((p) => Math.min(newsTotalPages, p + 1))}
+                    >
+                      →
+                    </button>
                   </div>
-                  <p>{news.text}</p>
-                </article>
-              ))}
-            </div>
+                )}
+              </>
+            )}
           </section>
         </div>
       </div>
+
+      {faq.length > 0 && (
+        <section className="panel">
+          <div className="panel-header">
+            <h2 className="panel-title">Мини-FAQ</h2>
+          </div>
+          <div className="faq-grid">
+            {faq.map((item, idx) => (
+              <article key={idx} className="faq-card">
+                <h3 className="faq-q">{item.q}</h3>
+                <p className="faq-a">{item.a}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
