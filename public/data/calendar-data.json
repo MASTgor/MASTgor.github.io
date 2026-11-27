@@ -125,6 +125,22 @@
       "source": "twitch",
       "status": "planned",
       "lastStreamDate": "2026-09-14"
+    },
+    {
+      "id": "2043475",
+      "name": "Благословение небожителей",
+      "year": " (2020)",
+      "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/ab244869-07b2-4ad0-87cf-5a6db7428e31/300x450",
+      "source": "kinopoisk",
+      "status": "planned"
+    },
+    {
+      "id": "1223947",
+      "name": "Мастер Темного Пути",
+      "year": " (2018)",
+      "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/1629390/3fefc170-a68d-44dc-98c0-3c5576b78af9/300x450",
+      "source": "kinopoisk",
+      "status": "planned"
     }
   ],
   "calendar": {
