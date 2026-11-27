@@ -141,6 +141,22 @@
       "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/1629390/3fefc170-a68d-44dc-98c0-3c5576b78af9/300x450",
       "source": "kinopoisk",
       "status": "planned"
+    },
+    {
+      "id": "110758",
+      "name": "The Legend of Zelda: Breath of the Wild",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/110758_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "512998",
+      "name": "The Legend of Zelda: Tears of the Kingdom",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/512998_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
     }
   ],
   "calendar": {
