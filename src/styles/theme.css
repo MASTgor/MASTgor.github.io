@@ -437,6 +437,49 @@ body,
   box-shadow: 2px 2px 0 0 var(--void);
 }
 
+.hero-snake-wrap {
+  cursor: default;
+  overflow: hidden;
+}
+
+.hero-snake-wrap:hover {
+  border-color: var(--void);
+}
+
+.hero-snake-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  background-color: var(--bg-check-a);
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0) 0 2px,
+      rgba(0, 0, 0, 0.14) 2px 4px
+    ),
+    conic-gradient(
+      var(--bg-check-b) 90deg,
+      var(--bg-check-a) 90deg 180deg,
+      var(--bg-check-b) 180deg 270deg,
+      var(--bg-check-a) 270deg
+    );
+  background-size: 100% 4px, 32px 32px;
+  background-attachment: fixed;
+}
+
+.hero-snake-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 7px;
+  font-size: 8px;
+  color: var(--gold);
+  background: rgba(13, 10, 18, 0.85);
+  border: 2px solid var(--void);
+  pointer-events: none;
+}
+
 .hero-actions {
   display: flex;
   gap: 12px;
@@ -449,6 +492,17 @@ body,
   grid-template-columns: 1.35fr 1fr;
   gap: 20px;
   align-items: start;
+}
+
+.home-grid > * {
+  min-width: 0;
+}
+
+.home-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
 }
 
 .home-side {
@@ -472,6 +526,16 @@ body,
   box-shadow:
     inset 3px 3px 0 0 var(--panel-hi),
     inset -3px -3px 0 0 var(--panel-lo);
+}
+
+.mini-card.is-clickable {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.mini-card.is-clickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
 }
 
 .mini-cover {
@@ -591,6 +655,18 @@ body,
   gap: 6px;
 }
 
+.last-stream-box.is-clickable {
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  border: 2px solid transparent;
+}
+
+.last-stream-box.is-clickable:hover {
+  background: var(--slot);
+  border-color: var(--gold);
+}
+
 .last-stream-game {
   font-family: var(--font-pixel);
   font-size: 12px;
@@ -626,6 +702,18 @@ body,
 .plan-row {
   display: flex;
   gap: 10px;
+}
+
+.plan-row.is-clickable {
+  cursor: pointer;
+  padding: 6px 8px;
+  margin: -4px -8px;
+  border: 2px solid transparent;
+}
+
+.plan-row.is-clickable:hover {
+  background: var(--slot);
+  border-color: var(--gold);
 }
 
 .plan-date {
@@ -1200,7 +1288,38 @@ body,
   text-shadow: 1px 1px 0 var(--void);
 }
 
-/* Мини-FAQ на главной */
+/* Мини-FAQ на главной — полоса ячеек 1 в 1 из StreamInfo */
+.retro-divider {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  height: 22px;
+  padding: 3px;
+  margin: 4px 0;
+  background: var(--void);
+  box-shadow: 4px 4px 0 0 var(--shadow);
+}
+
+.retro-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  background: #1f3f52;
+  box-shadow:
+    inset 2px 2px 0 0 var(--slot-wall),
+    inset -2px -2px 0 0 var(--slot-lip);
+}
+
+.retro-cell.on {
+  background: var(--brand);
+  box-shadow:
+    inset 3px 3px 0 0 var(--brand-ltr),
+    inset -3px -3px 0 0 var(--brand-dk);
+}
+
+.retro-cell.on.tip {
+  background: var(--gold);
+}
+
 .faq-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

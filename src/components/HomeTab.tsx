@@ -12,10 +12,14 @@ import {
   formatDateRu,
   formatDateTimeRu,
   formatDuration,
+  normalizeForMatch,
   normalizePlannedEntries,
   parseStreamTitle,
+  toDateKey,
 } from '../utils/format';
 import { FaqEditorModal, NewsEditorModal } from './AdminModals';
+import { GameDetailsModal } from './GameDetailsModal';
+import { SnakeWidget } from './SnakeWidget';
 
 interface HomeTabProps {
   games: GameItem[];
@@ -27,6 +31,7 @@ interface HomeTabProps {
   isAdmin?: boolean;
   onSaveNews?: (next: NewsItem[]) => void;
   onSaveFaq?: (next: FaqItem[]) => void;
+  onOpenDate?: (dateKey: string) => void;
 }
 
 const NEWS_PAGE_SIZE = 3;
@@ -41,9 +46,11 @@ export function HomeTab({
   isAdmin = false,
   onSaveNews,
   onSaveFaq,
+  onOpenDate,
 }: HomeTabProps) {
   const [previewError, setPreviewError] = useState(false);
   const [newsPage, setNewsPage] = useState(1);
+  const [selectedGame, setSelectedGame] = useState<GameItem | null>(null);
   const [editingNews, setEditingNews] = useState<{ item: NewsItem | null; isNew: boolean } | null>(
     null,
   );
@@ -70,6 +77,28 @@ export function HomeTab({
     const start = (safeNewsPage - 1) * NEWS_PAGE_SIZE;
     return sortedNews.slice(start, start + NEWS_PAGE_SIZE);
   }, [sortedNews, safeNewsPage]);
+
+  const matchGameInTitle = (gameName?: string, streamTitle?: string): GameItem | undefined => {
+    if (!streamTitle) return undefined;
+    if (gameName && gameName.toLowerCase() !== 'just chatting') return undefined;
+    const lowerTitle = streamTitle.toLowerCase();
+    const normTitle = normalizeForMatch(streamTitle);
+    return games.find((g) => {
+      const gLower = g.name.toLowerCase();
+      const gNorm = normalizeForMatch(g.name);
+      return lowerTitle.includes(gLower) || (gNorm.length > 0 && normTitle.includes(gNorm));
+    });
+  };
+
+  const findGameForPlan = (entry: PlannedStream): GameItem | undefined => {
+    if (entry.id) {
+      const byId = games.find((g) => String(g.id) === String(entry.id));
+      if (byId) return byId;
+    }
+    const targetName = (entry.game || entry.name || entry.title || '').toLowerCase();
+    if (!targetName) return undefined;
+    return games.find((g) => g.name.toLowerCase() === targetName);
+  };
 
   const previewUrl =
     liveState.status === 'live'
@@ -131,7 +160,7 @@ export function HomeTab({
           </div>
         </div>
 
-        {previewUrl && !previewError && (
+        {previewUrl && !previewError ? (
           <a
             className="hero-preview-wrap"
             href="https://www.twitch.tv/mastgor"
@@ -146,96 +175,77 @@ export function HomeTab({
             />
             <span className="hero-preview-badge">LIVE</span>
           </a>
+        ) : (
+          <SnakeWidget />
         )}
       </section>
 
       <div className="home-grid">
-        <section className="panel">
-          <div className="panel-header">
-            <h2 className="panel-title">Сейчас проходим и смотрим</h2>
-          </div>
-          {inProgress.length === 0 ? (
-            <p className="muted">Пока нет активных игр или позиций для просмотра.</p>
-          ) : (
-            <div className="mini-list">
-              {inProgress.map((item) => {
-                const nextDate = findNextStreamDate(item, calendar);
-                return (
-                  <article key={item.id} className="mini-card">
-                    <img src={item.image} alt={item.name} className="mini-cover" loading="lazy" />
-                    <div className="mini-content">
-                      <div className="mini-head">
-                        <span className="mini-title">
-                          {item.name}
-                          {item.year ?? ''}
-                        </span>
-                        <span className={`badge ${item.source === 'twitch' ? 'badge-game' : 'badge-show'}`}>
-                          {item.source === 'twitch' ? 'Игра' : 'Просмотр'}
-                        </span>
-                      </div>
-
-                      {item.checkpoint && (
-                        <div className="checkpoint-box">
-                          <span className="checkpoint-label">Остановились:</span> {item.checkpoint}
-                        </div>
-                      )}
-
-                      <div className="mini-meta">
-                        {nextDate ? (
-                          <span className="next-stream-note">
-                            Скоро новый стрим: <strong>{formatDateRu(nextDate)}</strong>
-                          </span>
-                        ) : (
-                          item.lastStreamDate && (
-                            <span>Последний стрим: {formatDateRu(item.lastStreamDate)}</span>
-                          )
-                        )}
-                        <div className="mini-links">
-                          {item.vodUrl && (
-                            <a href={item.vodUrl} target="_blank" rel="noopener noreferrer">
-                              VOD
-                            </a>
-                          )}
-                          {item.boostyUrl && (
-                            <a href={item.boostyUrl} target="_blank" rel="noopener noreferrer">
-                              Boosty
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <div className="home-side">
+        <div className="home-col">
           <section className="panel">
             <div className="panel-header">
-              <h2 className="panel-title">Последний стрим</h2>
+              <h2 className="panel-title">Прошлый стрим</h2>
             </div>
             {latestStream ? (() => {
               const parsed = parseStreamTitle(latestStream.title);
+              const streamDateKey = toDateKey(latestStream.start);
+              const matchedShow = matchGameInTitle(latestStream.game, latestStream.title);
+              const matchedGame =
+                matchedShow ||
+                games.find((g) => g.name.toLowerCase() === latestStream.game.toLowerCase());
+              const cover = matchedShow?.image || latestStream.image || matchedGame?.image;
+              const isShow =
+                matchedShow?.source === 'kinopoisk' ||
+                matchedGame?.source === 'kinopoisk' ||
+                latestStream.game.toLowerCase() === 'just chatting';
+              const displayCategory = matchedShow
+                ? `${latestStream.game} • ${matchedShow.name}`
+                : latestStream.game;
+
               return (
-                <div className="last-stream-box">
-                  <div className="last-stream-game">{latestStream.game}</div>
-                  {parsed.tags.length > 0 && (
-                    <div className="stream-tags">
-                      {parsed.tags.map((tag, idx) => (
-                        <span key={`${tag}-${idx}`} className="tag-badge">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                <article
+                  className="mini-card is-clickable"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onOpenDate?.(streamDateKey)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onOpenDate?.(streamDateKey);
+                    }
+                  }}
+                >
+                  {cover && (
+                    <img
+                      src={cover}
+                      alt={displayCategory}
+                      className="mini-cover"
+                      loading="lazy"
+                    />
                   )}
-                  <div className="last-stream-title">{parsed.cleanTitle}</div>
-                  <div className="last-stream-meta">
-                    <span>{formatDateTimeRu(latestStream.start)}</span>
-                    <span>Длительность: {formatDuration(latestStream.start, latestStream.end)}</span>
+                  <div className="mini-content">
+                    <div className="mini-head">
+                      <span className="mini-title">{displayCategory}</span>
+                      <span className={`badge ${isShow ? 'badge-show' : 'badge-game'}`}>
+                        {isShow ? 'Просмотр' : 'Игра'}
+                      </span>
+                    </div>
+                    {parsed.tags.length > 0 && (
+                      <div className="stream-tags">
+                        {parsed.tags.map((tag, idx) => (
+                          <span key={`${tag}-${idx}`} className="tag-badge">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="last-stream-title">{parsed.cleanTitle}</div>
+                    <div className="mini-meta">
+                      <span>{formatDateTimeRu(latestStream.start)}</span>
+                      <span>Длительность: {formatDuration(latestStream.start, latestStream.end)}</span>
+                    </div>
                   </div>
-                </div>
+                </article>
               );
             })() : (
               <p className="muted">История стримов пока пуста.</p>
@@ -244,30 +254,144 @@ export function HomeTab({
 
           <section className="panel">
             <div className="panel-header">
-              <h2 className="panel-title">Ближайшие планы</h2>
+              <h2 className="panel-title">Сейчас проходим и смотрим</h2>
+            </div>
+            {inProgress.length === 0 ? (
+              <p className="muted">Пока нет активных игр или позиций для просмотра.</p>
+            ) : (
+              <div className="mini-list">
+                {inProgress.map((item) => {
+                  const nextDate = findNextStreamDate(item, calendar);
+                  return (
+                    <article
+                      key={item.id}
+                      className="mini-card is-clickable"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedGame(item)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedGame(item);
+                        }
+                      }}
+                    >
+                      <img src={item.image} alt={item.name} className="mini-cover" loading="lazy" />
+                      <div className="mini-content">
+                        <div className="mini-head">
+                          <span className="mini-title">
+                            {item.name}
+                            {item.year ?? ''}
+                          </span>
+                          <span className={`badge ${item.source === 'twitch' ? 'badge-game' : 'badge-show'}`}>
+                            {item.source === 'twitch' ? 'Игра' : 'Просмотр'}
+                          </span>
+                        </div>
+
+                        {item.checkpoint && (
+                          <div className="checkpoint-box">
+                            <span className="checkpoint-label">Остановились:</span> {item.checkpoint}
+                          </div>
+                        )}
+
+                        <div className="mini-meta">
+                          {nextDate ? (
+                            <span className="next-stream-note">
+                              Скоро новый стрим: <strong>{formatDateRu(nextDate)}</strong>
+                            </span>
+                          ) : (
+                            item.lastStreamDate && (
+                              <span>Последний стрим: {formatDateRu(item.lastStreamDate)}</span>
+                            )
+                          )}
+                          <div className="mini-links" onClick={(e) => e.stopPropagation()}>
+                            {item.vodUrl && (
+                              <a href={item.vodUrl} target="_blank" rel="noopener noreferrer">
+                                VOD
+                              </a>
+                            )}
+                            {item.boostyUrl && (
+                              <a href={item.boostyUrl} target="_blank" rel="noopener noreferrer">
+                                Boosty
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="home-col">
+          <section className="panel">
+            <div className="panel-header">
+              <h2 className="panel-title">Запланировано</h2>
             </div>
             {upcomingEntries.length === 0 ? (
               <p className="muted">
                 Расписание на ближайшие дни пока не заполнено — список есть во вкладке «Игры и просмотр».
               </p>
             ) : (
-              <ul className="plan-list">
+              <div className="mini-list">
                 {upcomingEntries.map(([dateKey, raw]) => {
                   const items = normalizePlannedEntries(raw);
-                  return items.map((entry, idx) => (
-                    <li key={`${dateKey}-${idx}`} className="plan-row">
-                      <span className="plan-date">{formatDateRu(dateKey)}</span>
-                      <span>{entry.title}</span>
-                    </li>
-                  ));
+                  return items.map((entry, idx) => {
+                    const matchedGame = findGameForPlan(entry);
+                    const cover = entry.image || matchedGame?.image;
+                    const source = entry.source || matchedGame?.source || 'twitch';
+                    const isShow = source === 'kinopoisk';
+                    return (
+                      <article
+                        key={`${dateKey}-${idx}`}
+                        className="mini-card is-clickable"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => onOpenDate?.(dateKey)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onOpenDate?.(dateKey);
+                          }
+                        }}
+                      >
+                        {cover && (
+                          <img
+                            src={cover}
+                            alt={entry.title || ''}
+                            className="mini-cover"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="mini-content">
+                          <div className="mini-head">
+                            <span className="mini-title">{entry.title}</span>
+                            <span className={`badge ${isShow ? 'badge-show' : 'badge-game'}`}>
+                              {isShow ? 'Просмотр' : 'Игра'}
+                            </span>
+                          </div>
+                          {entry.note && <div className="checkpoint-box">{entry.note}</div>}
+                          <div className="mini-meta">
+                            <span className="next-stream-note">
+                              Запланировано: <strong>{formatDateRu(dateKey)}</strong>
+                            </span>
+                            {entry.time && <span>Время: {entry.time}</span>}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  });
                 })}
-              </ul>
+              </div>
             )}
           </section>
 
           <section className="panel">
             <div className="panel-header">
-              <h2 className="panel-title">Новости канала</h2>
+              <h2 className="panel-title">Новости</h2>
               {isAdmin && (
                 <button
                   type="button"
@@ -335,7 +459,15 @@ export function HomeTab({
       </div>
 
       {(faq.length > 0 || isAdmin) && (
-        <section className="panel">
+        <>
+          <div className="retro-divider" aria-hidden="true">
+            {Array.from({ length: 24 }, (_, idx) => {
+              const cls =
+                idx < 8 ? 'retro-cell on' : idx === 8 ? 'retro-cell on tip' : 'retro-cell';
+              return <span key={idx} className={cls} />;
+            })}
+          </div>
+          <section className="panel">
           <div className="panel-header">
             <h2 className="panel-title">Мини-FAQ</h2>
             {isAdmin && (
@@ -369,6 +501,16 @@ export function HomeTab({
             ))}
           </div>
         </section>
+        </>
+      )}
+
+      {selectedGame && (
+        <GameDetailsModal
+          game={selectedGame}
+          streams={streams}
+          calendar={calendar}
+          onClose={() => setSelectedGame(null)}
+        />
       )}
 
       {isAdmin && editingNews && (

@@ -31,6 +31,7 @@ function getTabFromHash(): TabId {
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>(getTabFromHash);
+  const [focusDateKey, setFocusDateKey] = useState<string | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarData>({ games: [], calendar: {} });
   const [streamsData, setStreamsData] = useState<StreamsHistoryData>({ streams: [] });
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
@@ -142,6 +143,11 @@ export function App() {
     window.scrollTo({ top: 0 });
   };
 
+  const openCalendarDate = (dateKey: string) => {
+    setFocusDateKey(dateKey);
+    navigate('calendar');
+  };
+
   return (
     <div className="site-shell">
       <header className="site-header">
@@ -189,6 +195,7 @@ export function App() {
             isAdmin={IS_ADMIN}
             onSaveNews={handleSaveNews}
             onSaveFaq={handleSaveFaq}
+            onOpenDate={openCalendarDate}
           />
         )}
         {activeTab === 'games' && (
@@ -207,6 +214,8 @@ export function App() {
             games={calendarData.games}
             streams={streamsData.streams}
             calendar={calendarData.calendar}
+            focusDateKey={focusDateKey}
+            onClearFocusDate={() => setFocusDateKey(null)}
             isAdmin={IS_ADMIN}
             onSaveStreams={handleSaveStreams}
           />

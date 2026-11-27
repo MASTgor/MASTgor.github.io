@@ -7,6 +7,88 @@ function toDatetimeLocal(ms: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+interface SearchResult {
+  id: string;
+  name: string;
+  year: string;
+  image: string;
+  source: GameSource;
+}
+
+function CategorySearchBox({ onPick }: { onPick: (item: SearchResult) => void }) {
+  const [apiSource, setApiSource] = useState<GameSource>('twitch');
+  const [apiQuery, setApiQuery] = useState('');
+  const [apiResults, setApiResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  const runSearch = async () => {
+    if (apiQuery.trim().length < 2) return;
+    setSearching(true);
+    try {
+      const res = await fetch(
+        `/api/search?source=${encodeURIComponent(apiSource)}&q=${encodeURIComponent(apiQuery.trim())}`,
+      );
+      const data = await res.json();
+      setApiResults(data.items || []);
+    } catch {
+      setApiResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <div className="admin-search-box">
+      <div className="admin-search-row">
+        <select
+          className="admin-input"
+          value={apiSource}
+          onChange={(e) => setApiSource(e.target.value as GameSource)}
+        >
+          <option value="twitch">Игра (Twitch)</option>
+          <option value="kinopoisk">Просмотр (Кинопоиск)</option>
+        </select>
+        <input
+          className="admin-input"
+          placeholder="Быстрый поиск (от 2 букв)..."
+          value={apiQuery}
+          onChange={(e) => setApiQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              runSearch();
+            }
+          }}
+        />
+        <button type="button" className="btn btn-sm btn-primary" onClick={runSearch}>
+          {searching ? '...' : 'Найти'}
+        </button>
+      </div>
+      {apiResults.length > 0 && (
+        <div className="admin-search-results">
+          {apiResults.map((it) => (
+            <button
+              key={`${it.source}-${it.id}`}
+              type="button"
+              className="admin-search-pick"
+              onClick={() => {
+                onPick(it);
+                setApiResults([]);
+              }}
+            >
+              {it.image && <img src={it.image} alt="" className="admin-pick-img" />}
+              <span>
+                {it.name}
+                {it.year}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface GameEditorModalProps {
   game: GameItem | null;
   isNew: boolean;
@@ -34,13 +116,6 @@ export function GameEditorModal({
       },
   );
 
-  const [apiSource, setApiSource] = useState<GameSource>('twitch');
-  const [apiQuery, setApiQuery] = useState('');
-  const [apiResults, setApiResults] = useState<
-    Array<{ id: string; name: string; year: string; image: string; source: GameSource }>
-  >([]);
-  const [searching, setSearching] = useState(false);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -48,22 +123,6 @@ export function GameEditorModal({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-
-  const runSearch = async () => {
-    if (apiQuery.trim().length < 2) return;
-    setSearching(true);
-    try {
-      const res = await fetch(
-        `/api/search?source=${encodeURIComponent(apiSource)}&q=${encodeURIComponent(apiQuery.trim())}`,
-      );
-      const data = await res.json();
-      setApiResults(data.items || []);
-    } catch {
-      setApiResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,63 +154,18 @@ export function GameEditorModal({
           </button>
         </div>
 
-        {isNew && (
-          <div className="admin-search-box">
-            <div className="admin-search-row">
-              <select
-                className="admin-input"
-                value={apiSource}
-                onChange={(e) => setApiSource(e.target.value as GameSource)}
-              >
-                <option value="twitch">Игра (Twitch)</option>
-                <option value="kinopoisk">Просмотр (Кинопоиск)</option>
-              </select>
-              <input
-                className="admin-input"
-                placeholder="Быстрый поиск (от 2 букв)..."
-                value={apiQuery}
-                onChange={(e) => setApiQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    runSearch();
-                  }
-                }}
-              />
-              <button type="button" className="btn btn-sm btn-primary" onClick={runSearch}>
-                {searching ? '...' : 'Найти'}
-              </button>
-            </div>
-            {apiResults.length > 0 && (
-              <div className="admin-search-results">
-                {apiResults.map((it) => (
-                  <button
-                    key={`${it.source}-${it.id}`}
-                    type="button"
-                    className="admin-search-pick"
-                    onClick={() => {
-                      setDraft((prev) => ({
-                        ...prev,
-                        id: it.id,
-                        name: it.name,
-                        year: it.year,
-                        image: it.image,
-                        source: it.source,
-                      }));
-                      setApiResults([]);
-                    }}
-                  >
-                    {it.image && <img src={it.image} alt="" className="admin-pick-img" />}
-                    <span>
-                      {it.name}
-                      {it.year}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <CategorySearchBox
+          onPick={(it) =>
+            setDraft((prev) => ({
+              ...prev,
+              id: it.id,
+              name: it.name,
+              year: it.year,
+              image: it.image,
+              source: it.source,
+            }))
+          }
+        />
 
         <div className="admin-form-grid">
           <label className="admin-field">
@@ -321,6 +335,16 @@ export function StreamEditorModal({
             ×
           </button>
         </div>
+
+        <CategorySearchBox
+          onPick={(it) =>
+            setDraft((prev) => ({
+              ...prev,
+              game: it.name,
+              image: it.image,
+            }))
+          }
+        />
 
         <div className="admin-form-grid">
           <label className="admin-field admin-col-2">

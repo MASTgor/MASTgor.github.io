@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GameItem, PlannedStream, StreamRecord } from '../types';
 import {
   formatDateRu,
@@ -16,6 +16,8 @@ interface CalendarTabProps {
   games: GameItem[];
   streams: StreamRecord[];
   calendar: Record<string, PlannedStream[] | PlannedStream | string>;
+  focusDateKey?: string | null;
+  onClearFocusDate?: () => void;
   isAdmin?: boolean;
   onSaveStreams?: (next: StreamRecord[]) => void;
 }
@@ -27,6 +29,8 @@ export function CalendarTab({
   games,
   streams,
   calendar,
+  focusDateKey,
+  onClearFocusDate,
   isAdmin = false,
   onSaveStreams,
 }: CalendarTabProps) {
@@ -57,6 +61,17 @@ export function CalendarTab({
   const [searchQuery, setSearchQuery] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
   const [brokenCovers, setBrokenCovers] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!focusDateKey) return;
+    const d = new Date(`${focusDateKey}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      setViewYear(d.getFullYear());
+      setViewMonth(d.getMonth());
+      setSelectedDateKey(focusDateKey);
+    }
+    onClearFocusDate?.();
+  }, [focusDateKey, onClearFocusDate]);
 
   const rawMonthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('ru-RU', {
     month: 'long',
