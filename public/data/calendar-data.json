@@ -157,6 +157,30 @@
       "image": "https://static-cdn.jtvnw.net/ttv-boxart/512998_IGDB-285x380.jpg",
       "source": "twitch",
       "status": "planned"
+    },
+    {
+      "id": "1826300051",
+      "name": "Mario Kart World",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/1826300051_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "33521",
+      "name": "Neighbours from Hell",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/33521_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
+    },
+    {
+      "id": "460102",
+      "name": "Rain World",
+      "year": "",
+      "image": "https://static-cdn.jtvnw.net/ttv-boxart/460102_IGDB-285x380.jpg",
+      "source": "twitch",
+      "status": "planned"
     }
   ],
   "calendar": {
