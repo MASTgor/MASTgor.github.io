@@ -184,22 +184,13 @@
     }
   ],
   "calendar": {
-    "2026-11-28": [
+    "2026-11-29": [
       {
         "id": "9324793",
         "name": "Мама в 16",
         "year": " (2023)",
         "image": "https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10893610/a1ea35ab-9f60-4c53-bc01-c08255a5bd01/300x450",
         "source": "kinopoisk"
-      }
-    ],
-    "2026-11-29": [
-      {
-        "id": "2067181260",
-        "name": "The Legend of Zelda: Ocarina of Time",
-        "year": "",
-        "image": "https://static-cdn.jtvnw.net/ttv-boxart/2067181260_IGDB-285x380.jpg",
-        "source": "twitch"
       }
     ]
   }
